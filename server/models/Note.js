@@ -1,5 +1,14 @@
 import mongoose from 'mongoose'
 
+const quizQuestionSchema = new mongoose.Schema(
+  {
+    question: { type: String, required: true },
+    options: { type: [String], default: [] },
+    correctAnswer: { type: String, default: '' },
+  },
+  { _id: false },
+)
+
 const noteSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -23,6 +32,10 @@ const noteSchema = new mongoose.Schema({
   quizQuestion: {
     type: String,
     default: '',
+  },
+  quizQuestions: {
+    type: [quizQuestionSchema],
+    default: [],
   },
   createdAt: {
     type: Date,

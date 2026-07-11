@@ -1,24 +1,72 @@
-const SUMMARY_PROMPT = `You are a study assistant. Read the student's note below and return:
-1) A 3 bullet-point summary of the key ideas
-2) Exactly 1 quiz question about this note
+const SUMMARY_PROMPT = `You are a study assistant. Read the student's note and return ONLY valid JSON (no markdown fences) with this shape:
+{
+  "summary": "- bullet one\\n- bullet two\\n- bullet three",
+  "quizQuestions": [
+    {
+      "question": "Multiple choice question 1?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Option A"
+    },
+    {
+      "question": "Multiple choice question 2?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Option B"
+    },
+    {
+      "question": "Multiple choice question 3?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Option C"
+    }
+  ]
+}
 
-Use this exact format (no extra commentary):
-SUMMARY:
-- bullet one
-- bullet two
-- bullet three
-QUIZ:
-Your quiz question here`
+Rules:
+- summary must be exactly 3 bullet points separated by newlines
+- quizQuestions must contain exactly 3 MCQs
+- each question needs 4 options
+- correctAnswer must exactly match one of the options`
+
+function extractJson(text) {
+  const cleaned = String(text || '').trim()
+  const fenced = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/i)
+  const candidate = fenced?.[1]?.trim() || cleaned
+  const start = candidate.indexOf('{')
+  const end = candidate.lastIndexOf('}')
+  if (start === -1 || end === -1) {
+    throw new Error('AI response did not include JSON.')
+  }
+  return JSON.parse(candidate.slice(start, end + 1))
+}
+
+function normalizeQuizQuestions(rawQuestions) {
+  if (!Array.isArray(rawQuestions)) return []
+
+  return rawQuestions.slice(0, 3).map((item, index) => {
+    const options = Array.isArray(item?.options)
+      ? item.options.map((option) => String(option).trim()).filter(Boolean)
+      : []
+
+    return {
+      question: String(item?.question || `Question ${index + 1}`).trim(),
+      options,
+      correctAnswer: String(item?.correctAnswer || options[0] || '').trim(),
+    }
+  })
+}
 
 function parseAiResponse(text) {
-  const cleaned = String(text || '').trim()
-  const quizMatch = cleaned.match(/QUIZ:\s*([\s\S]*)$/i)
-  const summaryMatch = cleaned.match(/SUMMARY:\s*([\s\S]*?)(?=QUIZ:|$)/i)
+  const data = extractJson(text)
+  const summary = String(data.summary || '').trim()
+  const quizQuestions = normalizeQuizQuestions(data.quizQuestions)
+  const quizQuestion =
+    quizQuestions[0]?.question ||
+    String(data.quizQuestion || '').trim()
 
-  const summary = (summaryMatch?.[1] || cleaned).trim()
-  const quizQuestion = (quizMatch?.[1] || '').trim()
+  if (!summary) {
+    throw new Error('AI response missing summary.')
+  }
 
-  return { summary, quizQuestion }
+  return { summary, quizQuestion, quizQuestions }
 }
 
 async function callClaude(noteContent) {
@@ -34,7 +82,7 @@ async function callClaude(noteContent) {
     },
     body: JSON.stringify({
       model: process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001',
-      max_tokens: 800,
+      max_tokens: 1600,
       messages: [
         {
           role: 'user',
@@ -67,6 +115,7 @@ async function callOpenAI(noteContent) {
     body: JSON.stringify({
       model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
       temperature: 0.4,
+      response_format: { type: 'json_object' },
       messages: [
         {
           role: 'user',

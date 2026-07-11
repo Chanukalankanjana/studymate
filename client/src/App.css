@@ -6,13 +6,37 @@
   --accent-deep: #0b6e64;
   --danger: #b42318;
   --danger-soft: #fef3f2;
-  --paper: #f3f7f9;
   --surface: rgba(255, 255, 255, 0.88);
+  --card: #ffffff;
+  --input-bg: #ffffff;
   --line: rgba(18, 38, 58, 0.12);
   --shadow: 0 14px 32px rgba(18, 38, 58, 0.08);
   --radius: 16px;
   --font-display: "Syne", sans-serif;
   --font-body: "Karla", sans-serif;
+  --page-bg:
+    radial-gradient(circle at 10% 12%, rgba(15, 138, 125, 0.14), transparent 40%),
+    radial-gradient(circle at 90% 0%, rgba(47, 110, 168, 0.12), transparent 34%),
+    linear-gradient(165deg, #e7eef3 0%, #dce8ef 48%, #e9f2f0 100%);
+}
+
+[data-theme='dark'] {
+  --ink: #e8eef4;
+  --ink-soft: #b7c4d1;
+  --muted: #8fa0b0;
+  --accent: #2bb7a8;
+  --accent-deep: #5fd0c3;
+  --danger: #ff8d84;
+  --danger-soft: rgba(180, 35, 24, 0.28);
+  --surface: rgba(18, 28, 38, 0.88);
+  --card: #182330;
+  --input-bg: #121c27;
+  --line: rgba(232, 238, 244, 0.12);
+  --shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+  --page-bg:
+    radial-gradient(circle at 12% 10%, rgba(43, 183, 168, 0.16), transparent 38%),
+    radial-gradient(circle at 88% 0%, rgba(70, 120, 180, 0.16), transparent 34%),
+    linear-gradient(165deg, #0d151d 0%, #121c27 52%, #0f1a22 100%);
 }
 
 *,
@@ -31,16 +55,15 @@ body {
   margin: 0;
   font-family: var(--font-body);
   color: var(--ink);
-  background:
-    radial-gradient(circle at 10% 12%, rgba(15, 138, 125, 0.14), transparent 40%),
-    radial-gradient(circle at 90% 0%, rgba(47, 110, 168, 0.12), transparent 34%),
-    linear-gradient(165deg, #e7eef3 0%, #dce8ef 48%, #e9f2f0 100%);
+  background: var(--page-bg);
   line-height: 1.55;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 h1,
 h2,
-h3 {
+h3,
+h4 {
   font-family: var(--font-display);
   margin: 0;
   line-height: 1.15;
@@ -81,14 +104,17 @@ textarea {
   letter-spacing: -0.04em;
 }
 
-.back-link {
-  color: var(--accent-deep);
-  font-weight: 700;
-  text-decoration: none;
+.theme-toggle {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.9rem;
 }
 
-.back-link:hover {
-  text-decoration: underline;
+.theme-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent-deep);
 }
 
 .app-layout {
@@ -118,7 +144,8 @@ textarea {
   min-height: 420px;
 }
 
-.note-form {
+.note-form,
+.note-edit-form {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
@@ -130,7 +157,8 @@ textarea {
   margin-bottom: 0.5rem;
 }
 
-.note-form label {
+.note-form label,
+.note-edit-form label {
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--ink-soft);
@@ -139,12 +167,14 @@ textarea {
 
 .note-form input,
 .note-form textarea,
+.note-edit-form input,
+.note-edit-form textarea,
 .search-field input {
   width: 100%;
   border: 1.5px solid var(--line);
   border-radius: 10px;
   padding: 0.7rem 0.85rem;
-  background: #fff;
+  background: var(--input-bg);
   color: var(--ink);
   outline: none;
   transition: border-color 0.2s ease;
@@ -152,11 +182,14 @@ textarea {
 
 .note-form input:focus,
 .note-form textarea:focus,
+.note-edit-form input:focus,
+.note-edit-form textarea:focus,
 .search-field input:focus {
   border-color: var(--accent);
 }
 
-.note-form textarea {
+.note-form textarea,
+.note-edit-form textarea {
   resize: vertical;
   min-height: 120px;
 }
@@ -176,7 +209,8 @@ textarea {
   padding: 0.7rem 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease,
+    border-color 0.2s ease, color 0.2s ease;
 }
 
 .btn:disabled {
@@ -188,6 +222,10 @@ textarea {
   margin-top: 0.75rem;
   background: var(--accent);
   color: #fff;
+}
+
+.note-card__actions .btn-primary {
+  margin-top: 0;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -203,7 +241,7 @@ textarea {
 }
 
 .btn-danger:hover {
-  background: #fce7e6;
+  filter: brightness(0.97);
 }
 
 .btn-secondary {
@@ -213,8 +251,25 @@ textarea {
   font-size: 0.9rem;
 }
 
+[data-theme='dark'] .btn-secondary {
+  background: rgba(43, 183, 168, 0.16);
+}
+
 .btn-secondary:hover:not(:disabled) {
   background: rgba(15, 138, 125, 0.2);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--line);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.88rem;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-deep);
 }
 
 .note-card__content {
@@ -223,7 +278,16 @@ textarea {
 }
 
 .note-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
   margin-top: 0.9rem;
+}
+
+.note-card__header-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-shrink: 0;
 }
 
 .note-card__ai {
@@ -233,7 +297,6 @@ textarea {
 }
 
 .note-card__ai h4 {
-  font-family: var(--font-display);
   font-size: 0.92rem;
   margin: 0 0 0.4rem;
   color: var(--accent-deep);
@@ -255,6 +318,59 @@ textarea {
 .note-card__quiz {
   color: var(--ink);
   font-weight: 600;
+}
+
+.quiz-list {
+  margin: 0.4rem 0 0;
+  padding-left: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.quiz-question {
+  font-weight: 700;
+  margin-bottom: 0.45rem;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.quiz-option {
+  text-align: left;
+  border: 1.5px solid var(--line);
+  background: var(--input-bg);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  cursor: pointer;
+}
+
+.quiz-option:hover {
+  border-color: var(--accent);
+}
+
+.quiz-option.is-selected {
+  border-color: var(--accent);
+}
+
+.quiz-option.is-correct {
+  border-color: #1f9d63;
+  background: rgba(31, 157, 99, 0.12);
+}
+
+.quiz-option.is-wrong {
+  border-color: var(--danger);
+  background: rgba(180, 35, 24, 0.1);
+}
+
+.quiz-feedback {
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--muted);
 }
 
 .notes-toolbar {
@@ -282,8 +398,8 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 1rem;
-  background: #fff;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  background: var(--card);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.25s ease;
 }
 
 .note-card:hover {

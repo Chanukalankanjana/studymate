@@ -5,11 +5,25 @@ import './App.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/notes'
 
+function getInitialTheme() {
+  const saved = localStorage.getItem('studymate-theme')
+  if (saved === 'dark' || saved === 'light') return saved
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
+}
+
 function App() {
   const [notes, setNotes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [theme, setTheme] = useState(getInitialTheme)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('studymate-theme', theme)
+  }, [theme])
 
   useEffect(() => {
     async function loadNotes() {
@@ -52,6 +66,24 @@ function App() {
 
     const created = await response.json()
     setNotes((current) => [created, ...current])
+  }
+
+  async function handleUpdateNote(id, updates) {
+    const response = await fetch(`${API_URL}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to update note.')
+    }
+
+    setNotes((current) =>
+      current.map((note) => ((note._id || note.id) === id ? data : note)),
+    )
   }
 
   async function handleDeleteNote(id) {
@@ -99,6 +131,16 @@ function App() {
           <p className="eyebrow">Your study workspace</p>
           <h1>StudyMate</h1>
         </div>
+        <button
+          className="btn theme-toggle"
+          type="button"
+          onClick={() =>
+            setTheme((current) => (current === 'dark' ? 'light' : 'dark'))
+          }
+          aria-label="Toggle dark mode"
+        >
+          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </button>
       </header>
 
       <main className="app-layout">
@@ -141,6 +183,7 @@ function App() {
                   note={note}
                   onDelete={handleDeleteNote}
                   onSummarize={handleSummarizeNote}
+                  onUpdate={handleUpdateNote}
                 />
               ))}
             </div>
