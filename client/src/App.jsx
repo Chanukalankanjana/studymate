@@ -68,6 +68,22 @@ function App() {
     )
   }
 
+  async function handleSummarizeNote(id) {
+    const response = await fetch(`${API_URL}/${id}/summarize`, {
+      method: 'POST',
+    })
+
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to summarize note.')
+    }
+
+    setNotes((current) =>
+      current.map((note) => ((note._id || note.id) === id ? data : note)),
+    )
+  }
+
   const query = search.trim().toLowerCase()
   const filteredNotes = notes.filter((note) => {
     if (!query) return true
@@ -124,6 +140,7 @@ function App() {
                   key={note._id || note.id}
                   note={note}
                   onDelete={handleDeleteNote}
+                  onSummarize={handleSummarizeNote}
                 />
               ))}
             </div>

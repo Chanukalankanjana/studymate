@@ -1,11 +1,25 @@
-function NoteCard({ note, onDelete }) {
+import { useState } from 'react'
+
+function NoteCard({ note, onDelete, onSummarize }) {
   const noteId = note._id || note.id
+  const [summarizing, setSummarizing] = useState(false)
 
   async function handleDelete() {
     try {
       await onDelete(noteId)
     } catch (err) {
       window.alert(err.message || 'Could not delete note.')
+    }
+  }
+
+  async function handleSummarize() {
+    setSummarizing(true)
+    try {
+      await onSummarize(noteId)
+    } catch (err) {
+      window.alert(err.message || 'Could not summarize note.')
+    } finally {
+      setSummarizing(false)
     }
   }
 
@@ -25,7 +39,32 @@ function NoteCard({ note, onDelete }) {
           Delete
         </button>
       </header>
+
       <p className="note-card__content">{note.content}</p>
+
+      <div className="note-card__actions">
+        <button
+          className="btn btn-secondary"
+          type="button"
+          onClick={handleSummarize}
+          disabled={summarizing}
+        >
+          {summarizing ? 'Summarizing...' : '✨ Summarize'}
+        </button>
+      </div>
+
+      {note.summary ? (
+        <div className="note-card__ai">
+          <h4>AI Summary</h4>
+          <pre className="note-card__summary">{note.summary}</pre>
+          {note.quizQuestion ? (
+            <>
+              <h4>Quiz Question</h4>
+              <p className="note-card__quiz">{note.quizQuestion}</p>
+            </>
+          ) : null}
+        </div>
+      ) : null}
     </article>
   )
 }

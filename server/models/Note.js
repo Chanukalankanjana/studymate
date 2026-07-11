@@ -16,6 +16,14 @@ const noteSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  summary: {
+    type: String,
+    default: '',
+  },
+  quizQuestion: {
+    type: String,
+    default: '',
+  },
   createdAt: {
     type: Date,
     default: Date.now,

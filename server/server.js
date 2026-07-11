@@ -3,6 +3,7 @@ import cors from 'cors'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import Note from './models/Note.js'
+import { generateNoteSummary } from './services/ai.js'
 
 dotenv.config()
 
@@ -70,6 +71,34 @@ app.delete('/api/notes/:id', async (req, res) => {
     res.json({ message: 'Note deleted.', note: deleted })
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete note.' })
+  }
+})
+
+app.post('/api/notes/:id/summarize', async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid note id.' })
+    }
+
+    const note = await Note.findById(id)
+
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found.' })
+    }
+
+    const { summary, quizQuestion } = await generateNoteSummary(note.content)
+
+    note.summary = summary
+    note.quizQuestion = quizQuestion
+    await note.save()
+
+    res.json(note)
+  } catch (error) {
+    res.status(500).json({
+      error: error.message || 'Failed to summarize note.',
+    })
   }
 })
 
