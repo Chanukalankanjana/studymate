@@ -32,8 +32,9 @@ Secrets live in `server/.env` (never commit this file).
 | --- | --- |
 | `MONGO_URI` | MongoDB Atlas or local MongoDB connection string |
 | `PORT` | API port (default `5000`) |
-| `ANTHROPIC_API_KEY` | Claude API key for summaries + quiz mode |
-| `OPENAI_API_KEY` | Optional alternative to Claude |
+| `GEMINI_API_KEY` | Google Gemini API key for summaries + quiz mode (free tier available) |
+| `ANTHROPIC_API_KEY` | Optional Claude API key |
+| `OPENAI_API_KEY` | Optional OpenAI API key |
 
 Copy the example file, then fill in real values:
 

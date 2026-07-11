@@ -69,6 +69,46 @@ function parseAiResponse(text) {
   return { summary, quizQuestion, quizQuestions }
 }
 
+async function callGemini(noteContent) {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) return null
+
+  const model = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite'
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      contents: [
+        {
+          parts: [
+            {
+              text: `${SUMMARY_PROMPT}\n\nNOTE:\n${noteContent}`,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 1600,
+        responseMimeType: 'application/json',
+      },
+    }),
+  })
+
+  if (!response.ok) {
+    const details = await response.text()
+    throw new Error(`Gemini API error: ${details}`)
+  }
+
+  const data = await response.json()
+  const text =
+    data.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('\n') ||
+    ''
+  return parseAiResponse(text)
+}
+
 async function callClaude(noteContent) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return null
@@ -136,13 +176,29 @@ async function callOpenAI(noteContent) {
 }
 
 export async function generateNoteSummary(noteContent) {
-  const fromClaude = await callClaude(noteContent)
-  if (fromClaude) return fromClaude
+  const providers = [
+    { name: 'Gemini', run: callGemini },
+    { name: 'OpenAI', run: callOpenAI },
+    { name: 'Claude', run: callClaude },
+  ]
 
-  const fromOpenAI = await callOpenAI(noteContent)
-  if (fromOpenAI) return fromOpenAI
+  const errors = []
+
+  for (const provider of providers) {
+    try {
+      const result = await provider.run(noteContent)
+      if (result) return result
+    } catch (error) {
+      errors.push(`${provider.name}: ${error.message}`)
+      console.error(`${provider.name} summarize failed:`, error.message)
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(errors.join(' | '))
+  }
 
   throw new Error(
-    'Set ANTHROPIC_API_KEY or OPENAI_API_KEY in server/.env to enable AI summaries.',
+    'Set GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY in server/.env to enable AI summaries.',
   )
 }
