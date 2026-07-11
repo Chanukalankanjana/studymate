@@ -1,0 +1,21 @@
+{
+  "name": "studymate-mcp-server",
+  "version": "1.0.0",
+  "description": "StudyMate MCP server (stdio)",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "studymate-mcp": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  }
+}

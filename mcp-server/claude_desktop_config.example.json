@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "studymate": {
+      "command": "node",
+      "args": [
+        "D:\\DSJ Academy\\studymate\\mcp-server\\index.js"
+      ],
+      "env": {
+        "STUDYMATE_API_URL": "http://localhost:5000/api/notes"
+      }
+    }
+  }
+}
